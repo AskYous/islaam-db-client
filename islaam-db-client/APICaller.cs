@@ -1,4 +1,5 @@
 ﻿using Google.Apis.Sheets.v4;
+using System.Collections.Generic;
 
 namespace islaam_db_client
 {
@@ -7,7 +8,7 @@ namespace islaam_db_client
         /// <summary>
         /// The sheet ID.
         /// </summary>
-        private readonly string SHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
+        private readonly string SHEET_ID = "1oEhVbC85KnVYpjOnqX18plTSyjyH6F4dxNQ4SjjkBAs";
         /// <summary>
         /// The service that calls the API.
         /// </summary>
@@ -19,14 +20,31 @@ namespace islaam_db_client
                 ApiKey = ApiKey
             });
         }
-        /// <summary>
-        /// Returns a GET request to the sheet.
-        /// </summary>
-        /// <returns>The GET request.</returns>
-        /// <param name="range">The rango to get from the sheet.</param>
-        public SpreadsheetsResource.ValuesResource.GetRequest Get(string range)
+        public SpreadsheetsResource.ValuesResource.GetRequest Get(string sheetName = "People", string fromRange = "A", string toRange = "Z")
         {
-            return service.Spreadsheets.Values.Get(SHEET_ID, range);
+            var range = $"{sheetName}!{fromRange}:{toRange}";
+            var values = service.Spreadsheets.Values.Get(SHEET_ID, range);
+            return values;
+        }
+
+        /// <summary>
+        /// Makes the row size == column size by appending nulls. Also converts empty strings to nulls.
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <param name="values"></param>
+        public static void fixList(List<object> columns, List<object> values)
+        {
+            for (var i = 0; i < columns.Count; i++)
+            {
+                if (values.Count < columns.Count)
+                {
+                    values.Add(null);
+                }
+                if (values[i] != null && string.IsNullOrWhiteSpace(values[i].ToString()))
+                {
+                    values[i] = null;
+                }
+            }
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace islaam_db_client
 {
     public class PersonAPI
@@ -8,18 +11,25 @@ namespace islaam_db_client
         {
             this.Caller = caller;
         }
-        public Person Search(string query)
+        private IList<Person> GetData()
         {
-            var person = Caller.Get("Class Data!A2:E");
-            var response = person.Execute();
-            return new Person()
-            {
-                name = "As-Sa'dee",
-                kunya = "Aboo ‘Abdillaah, 'Abdur-Rahmaan ibn Naasir ibn ‘Abdillaah ibn Naasir as-Sa'dee",
-                birthYear = 1307,
-                deathYear = 1375,
-                source = "http://www.bakkah.net/en/biography-shaykh-abdur-rahmaan-naasir-as-sadee.htm",
-            };
+            var values = Caller.Get("People", "A", "Z").Execute().Values;
+            return (from value in values.Skip(1)
+                    select new Person(
+                        new List<object>(value),
+                        new List<object>(values[0])
+                     )).ToList();
+
+        }
+        public List<Person> Search(string query)
+        {
+            query = query.ToLower();
+            var results = GetData()
+                .Where(p =>
+                    (p.name != null && p.name.ToLower().Contains(query))
+                    || (p.kunya != null && p.kunya.ToLower().Contains(query))
+                ).ToList();
+            return results;
         }
     }
 }

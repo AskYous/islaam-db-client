@@ -13,10 +13,9 @@ namespace islaam_db_client_unit_tests
         [Fact]
         public void SearchForAPerson()
         {
-            var result = islaamDB.PersonAPI.Search("Sa'dee");
-            Assert.NotNull(result);
-            Assert.Contains("Sa'dee", result.name);
-            Assert.Contains("Sa'dee", result.kunya);
+            var result = islaamDB.PersonAPI.Search("abu khadeeja");
+            Assert.True(result.Count > 0);
+            Assert.Contains("abu khadeejah", result[0].name.ToLower());
         }
     }
 }
