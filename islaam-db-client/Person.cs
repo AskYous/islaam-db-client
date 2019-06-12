@@ -8,9 +8,14 @@ namespace islaam_db_client
     {
         public Person(List<object> vals, List<object> cols)
         {
-            APICaller.fixList(cols, vals);
+            APICaller.FixList(cols, vals);
+
             // ensure its size is full
-            var valStrings = (from val in vals select val != null ? val.ToString() : null).ToList();
+            var valStrings = (
+                from val in vals 
+                select val?.ToString()
+            ).ToList();
+
             // to lowercase
             var columnsInLowerCase = (from column in cols select column.ToString().ToLower()).ToList();
 
@@ -34,8 +39,7 @@ namespace islaam_db_client
             generation = valStrings[colsInOrd.generation];
 
             // ints that need parsing
-            if (valStrings[colsInOrd.id] != null)
-                id = int.Parse(valStrings[colsInOrd.id]);
+            id = int.Parse(valStrings[colsInOrd.id]);
             if (valStrings[colsInOrd.taqreebId] != null)
                 taqreebNumber = int.Parse(valStrings[colsInOrd.taqreebId]);
             if (valStrings[colsInOrd.birthYear] != null)

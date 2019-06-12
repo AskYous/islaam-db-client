@@ -32,7 +32,7 @@ namespace islaam_db_client
         /// </summary>
         /// <param name="columns"></param>
         /// <param name="values"></param>
-        public static void fixList(List<object> columns, List<object> values)
+        public static void FixList(List<object> columns, List<object> values)
         {
             for (var i = 0; i < columns.Count; i++)
             {
