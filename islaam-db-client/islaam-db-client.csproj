@@ -3,6 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <RootNamespace>islaam_db_client</RootNamespace>
+    <PackOnBuild>true</PackOnBuild>
+    <PackageId>IslaamDBClient</PackageId>
+    <PackageVersion>0.0</PackageVersion>
+    <Authors>Yousef Shanawany&lt;askyous@gmail.com&gt;</Authors>
+    <Description>A client to access the Islaam Database. You can browse the database here:
+https://docs.google.com/spreadsheets/d/1oEhVbC85KnVYpjOnqX18plTSyjyH6F4dxNQ4SjjkBAs/edit?usp=sharing</Description>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageTags>islam</PackageTags>
+    <PackageLicenseUrl>https://spdx.org/licenses/MIT.html</PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +19,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
+    <PackageReference Include="Google.Apis.Core" Version="1.40.2" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="credentials.json" />
