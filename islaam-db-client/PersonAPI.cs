@@ -11,15 +11,11 @@ namespace islaam_db_client
         {
             this.Caller = caller;
         }
-        private IList<Person> GetData()
+        public IList<Person> GetData()
         {
-            var values = Caller.Get("People", "A", "Z").Execute().Values;
-            var valsWithIDAndName = values
+            var values = Caller.Get("People", "A", "Z");
+            var people = values
                 .Skip(1)
-                .Where(v => v.Count >= 2)
-                .Where(value => !string.IsNullOrWhiteSpace(value[0].ToString())
-                    && !string.IsNullOrWhiteSpace(value[1].ToString())
-                )
                 .Select(p =>
                     {
                         var vals = new List<object>(p);
@@ -28,29 +24,38 @@ namespace islaam_db_client
                     }
                 )
                  .ToList();
-            return valsWithIDAndName;
+            return people;
 
         }
         public List<Person> Search(string query)
         {
             query = query.ToLower();
             var data = GetData();
-            var results = data
+            var resultsQuery = data
                 .OrderBy(p =>
                 {
-                    if (p.name == query) return 0;
-                    if (p.kunya != null && p.kunya == query) return 0;
+                    var tempName = p.name;
+                    var tempKunya = p.kunya;
 
-                    if (p.name.Contains(query)) return 0;
-                    if (p.kunya != null && p.kunya.Contains(query)) return 0;
+                    if (!query.ToLower().Contains("shaykh") && !query.ToLower().Contains("shaikh"))
+                    {
+                        tempName = tempName.Replace("Shaykh", "");
+                        tempKunya = tempKunya?.Replace("Shaykh", "");
+                    }
+                    if (tempName == query) return 0;
+                    if (tempKunya != null && tempKunya == query) return 0;
 
-                    var nameScore = LevenshteinDistance.Compute(query, p.name);
+                    if (tempName.Contains(query)) return 0;
+                    if (tempKunya != null && tempKunya.Contains(query)) return 0;
+
+                    var nameScore = LevenshteinDistance.Compute(query, tempName);
                     var kunyaScore = int.MaxValue;
 
-                    if (p.kunya != null) kunyaScore = LevenshteinDistance.Compute(query, p.kunya);
+                    if (tempKunya != null) kunyaScore = LevenshteinDistance.Compute(query, p.kunya);
                     return Math.Min(nameScore, kunyaScore);
                 });
-            return results.ToList();
+            var results = resultsQuery.ToList();
+            return results;
         }
     }
 }

@@ -15,11 +15,13 @@ namespace islaam_db_client
         private readonly APICaller ApiCaller;
 
         public readonly PersonAPI PersonAPI;
+        public readonly PraisesAPI PraisesAPI;
 
         public IslaamDBClient(string APIKey)
         {
             ApiCaller = new APICaller(APIKey);
             PersonAPI = new PersonAPI(ApiCaller);
+            PraisesAPI = new PraisesAPI(ApiCaller);
         }
     }
 }

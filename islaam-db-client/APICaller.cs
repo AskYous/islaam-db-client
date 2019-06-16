@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Sheets.v4;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace islaam_db_client
 {
@@ -20,11 +21,31 @@ namespace islaam_db_client
                 ApiKey = ApiKey
             });
         }
-        public SpreadsheetsResource.ValuesResource.GetRequest Get(string sheetName = "People", string fromRange = "A", string toRange = "Z")
+        public IList<IList<object>> Get(
+            string sheetName = "People",
+            string fromRange = "A",
+            string toRange = "Z",
+            int minNonNullCols = 1
+        )
         {
             var range = $"{sheetName}!{fromRange}:{toRange}";
-            var values = service.Spreadsheets.Values.Get(SHEET_ID, range);
-            return values;
+            var values = service.Spreadsheets.Values
+                .Get(SHEET_ID, range)
+                .Execute()
+                .Values
+                .Where(v => v.Count >= minNonNullCols)
+                .Where(value =>
+                {
+                    for (var i = 0; i < minNonNullCols; i++)
+                    {
+                        if (string.IsNullOrWhiteSpace(value[i].ToString()))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            return values.ToList();
         }
 
         /// <summary>
