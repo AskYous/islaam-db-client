@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using islaam_db_client;
@@ -11,6 +12,28 @@ namespace islaam_db_client_unit_tests
         public UnitTest()
         {
             islaamDB = new IslaamDBClient(APIKey.KEY);
+        }
+
+        [Theory]
+        [InlineData(125, new int[] { 186, 126, 187, 43, 188, 189, 190, 191, 192, 193, 194 })]
+        public void getTeachers(int studentId, int[] teacherIds)
+        {
+            var tids = teacherIds.OrderBy(t => t).ToList();
+            var data = islaamDB.StudentsAPI
+                .GetData()
+                .Where(p => p.studentId == studentId).ToList();
+            var studentRelationships = data
+                .Select(p => p.teacherId)
+                .OrderBy(s => s).ToList();
+
+            // same length
+            Assert.Equal(studentRelationships.Count, tids.Count);
+
+            // same numbers
+            for (var i = 0; i < tids.Count; i++)
+            {
+                Assert.Equal(studentRelationships[i], tids[i]);
+            }
         }
 
         [Theory]
@@ -67,11 +90,39 @@ namespace islaam_db_client_unit_tests
         [InlineData("Muhammad bin Zarrad", 30)]
         [InlineData("Ibn Hajr", 16)]
         [InlineData("Mujaahid", 89)]
+        [InlineData("Rabee'", 72)]
+        [InlineData("Shaykh Rabee'", 72)]
+        [InlineData("ash-shaafi'ee", 41)]
+        [InlineData("ahmad", 106)]
         public void SearchForAPerson(string query, int id)
         {
             var result = islaamDB.PersonAPI.Search(query);
-            Assert.True(result.Count > 0);
-            Assert.Equal(result[0].id, id);
+
+            Assert.True(result.Count > 0, "Should have results.");
+            Assert.Equal(result[0].id, id); // "Should be correct search result."
+        }
+        [Theory]
+        [InlineData(99)]
+        [InlineData(253)]
+        [InlineData(69)]
+        [InlineData(7)]
+        [InlineData(215)]
+        [InlineData(106)]
+        [InlineData(73)]
+        [InlineData(74)]
+        [InlineData(210)]
+        [InlineData(71)]
+        [InlineData(30)]
+        [InlineData(16)]
+        [InlineData(89)]
+        [InlineData(72)]
+        public void GetBioQuickly(int id)
+        {
+            var person = islaamDB.PersonAPI.GetData().First(p => p.id == id);
+            var start = DateTime.Now;
+            person.BioIntro(islaamDB);
+            var time = DateTime.Now - start;
+            Assert.True(time.TotalSeconds < 3);
         }
     }
 }

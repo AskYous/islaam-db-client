@@ -89,17 +89,18 @@ namespace islaam_db_client
 
         public string BioIntro(IslaamDBClient idb)
         {
+            var people = idb.PersonAPI.GetData().ToList();
             var pronoun = isMale ? "He" : "She";
             var possesivePronoun = isMale ? "His" : "Her";
-            List<string> bioIntro = new List<string>{ $"{pronoun} is " };
+            List<string> bioIntro = new List<string> { $"{pronoun} is " };
             var praises = idb.PraisesAPI.GetData().Where(pr => pr.recommendeeId == id).ToList();
             var titles = String.Join(", ", praises.Select(p => p.title).Distinct());
-            var praisers = getPraisers(idb, praises);
+            var praisers = getPraisers(people, praises);
 
             // booleans
             var hasPraises = praises.Count > 0;
             var hasLocation = location != null;
-            var hasKunya = location != null;
+            var hasKunya = kunya != null;
             var hasDeathYear = deathYear != null;
             var hasBirthYear = birthYear != null;
 
@@ -117,7 +118,7 @@ namespace islaam_db_client
                     $"{pronoun} was born in the year {birthYear} and died {deathYear} AH."
                 );
             else if (hasBirthYear) bioIntro.Add($"{pronoun} was born in the year {birthYear} AH.");
-            else if(hasDeathYear) bioIntro.Add($"{pronoun} died in the year {deathYear} AH.");
+            else if (hasDeathYear) bioIntro.Add($"{pronoun} died in the year {deathYear} AH.");
 
             if (hasPraises)
             {
@@ -126,7 +127,7 @@ namespace islaam_db_client
 
             bioIntro.Add($"\n\nSource:\n{source}.");
 
-            if(bioIntro.Count == 2)
+            if (bioIntro.Count == 2)
             {
                 bioIntro.Add("\nSorry. That's all I know at the moment.");
             }
@@ -136,15 +137,12 @@ namespace islaam_db_client
             // join sentences together
             return String.Join(" ", bioIntro);
         }
-        private string getPraisers(IslaamDBClient idb, List<Praise> praises)
+        private string getPraisers(List<Person> people, List<Praise> praises)
         {
             return String.Join(", ", praises
                         .Select(p => p.recommenderId)
                         .Distinct()
-                        .Select(pId => idb.PersonAPI
-                            .GetData()
-                            .First(person => person.id == pId)
-                        )
+                        .Select(pId => people.First(p => p.id == pId))
                         .Select(person => person.name)
                     );
         }
