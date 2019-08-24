@@ -6,17 +6,28 @@ using Xunit;
 
 namespace islaam_db_client_unit_tests
 {
-    public class UnitTest
+    public class QueryVariations
     {
-        private readonly IslaamDBClient islaamDB;
-        public UnitTest()
+        [Theory]
+        [InlineData("test", new string[] { "test" })]
+        [InlineData("test'", new string[] { "test'", "test" })]
+        [InlineData("test'", new string[] { "test", "test'" })]
+        [InlineData("'abdel-barr", new string[] { "'abdel-barr", "abdel-barr", "'abdelbarr", "abdelbarr" })]
+        [InlineData("'abdel barr", new string[] { "'abdel barr", "'abdelbarr", "abdel barr", "abdelbarr" })]
+        public void TestGetQueryVariations(string query, string[] expected)
         {
-            islaamDB = new IslaamDBClient(APIKey.KEY);
+            var expSet = new HashSet<string>(expected);
+            var actual = QueryHelpers.GetNameVariations(query);
+            Assert.Equal(expSet, actual);
         }
+    }
+    public class ForeignKeys
+    {
+        private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
 
         [Theory]
         [InlineData(125, new int[] { 186, 126, 187, 43, 188, 189, 190, 191, 192, 193, 194 })]
-        public void getTeachers(int studentId, int[] teacherIds)
+        public void GetTeachers(int studentId, int[] teacherIds)
         {
             var tids = teacherIds.OrderBy(t => t).ToList();
             var data = islaamDB.StudentsAPI
@@ -52,7 +63,7 @@ namespace islaam_db_client_unit_tests
         [InlineData(72, new int[] { 130, 112, 59, 73, 73, 73, 102, 125, 125, 125, 44, 113, 113 })]
         public void GetPeopleWhoPraisedAPerson(int personId, IList<int> praisers)
         {
-            var person = islaamDB.PersonAPI.GetData().First(p => p.id == personId);
+            var person = islaamDB.PersonAPI.GetDataFromSheet().First(p => p.id == personId);
             praisers = praisers.OrderBy(p => p).ToList(); // sort
             var praises = islaamDB.PraisesAPI // sort
                 .GetData()
@@ -69,12 +80,16 @@ namespace islaam_db_client_unit_tests
                 Assert.Equal(praises[i].recommenderId, praisers[i]);
             }
         }
+    } public class Search
+    {
+        private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
+
 
         [Theory]
         [InlineData("abu khadeeja", 99)]
-        [InlineData("badr", 253)]
+        [InlineData("badr", null)]
         [InlineData("abdurrazaq badr", 253)]
-        [InlineData("'Abdur-Razzaaq", 253)]
+        [InlineData("'Abdur-Razzaaq", null)]
         [InlineData("'Abdur-Razzaaq Al-Badr", 253)]
         [InlineData("moosaa richardson", 69)]
         [InlineData("As-Sa'dee", 7)]
@@ -82,6 +97,7 @@ namespace islaam_db_client_unit_tests
         [InlineData("ibn taymiyya", 215)]
         [InlineData("Imaam Ahmad", 106)]
         [InlineData("Bin Baz", 73)]
+        [InlineData("Ibn Baz", 73)]
         [InlineData("Muhammad al-Jaamee", 74)]
         [InlineData("Muhammad ibn 'Abdel Wahhaab", 210)]
         [InlineData("Shaykh Muhammad Baazmool", 71)]
@@ -94,13 +110,24 @@ namespace islaam_db_client_unit_tests
         [InlineData("Shaykh Rabee'", 72)]
         [InlineData("ash-shaafi'ee", 41)]
         [InlineData("ahmad", 106)]
-        public void SearchForAPerson(string query, int id)
+        [InlineData("derp", null)]
+        [InlineData("John Jones", null)]
+        [InlineData("John", null)]
+        [InlineData("Moosaa", null)]
+        public void SearchForAPerson(string query, int? id, int maxSxore = 5)
         {
-            var result = islaamDB.PersonAPI.Search(query);
+            var scores = islaamDB.PersonAPI.Search(query);
+            var results = scores.FindAll(p => p.lavDistance <= maxSxore);
+            var ordered = scores.OrderBy(s => s.lavDistance).ToList();
 
-            Assert.True(result.Count > 0, "Should have results.");
-            Assert.Equal(result[0].id, id); // "Should be correct search result."
+            if (results.Count == 0)
+                Assert.True(id == null, "Should have returned results");
+            else
+                Assert.Equal(ordered[0].person.id, id); // "Should be correct search result."
         }
+    }
+    public class Bio {
+        private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
         [Theory]
         [InlineData(99)]
         [InlineData(253)]
@@ -118,7 +145,7 @@ namespace islaam_db_client_unit_tests
         [InlineData(72)]
         public void GetBioQuickly(int id)
         {
-            var person = islaamDB.PersonAPI.GetData().First(p => p.id == id);
+            var person = islaamDB.PersonAPI.GetDataFromSheet().First(p => p.id == id);
             var start = DateTime.Now;
             person.BioIntro(islaamDB);
             var time = DateTime.Now - start;

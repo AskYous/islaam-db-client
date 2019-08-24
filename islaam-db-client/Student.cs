@@ -43,22 +43,23 @@ namespace islaam_db_client
             /// Get column orders
             var colsInOrd = new
             {
-                studentId = columnsInLowerCase.IndexOf("student id"),
-                studentName = columnsInLowerCase.IndexOf("student"),
-                teacherId = columnsInLowerCase.IndexOf("teacher id"),
-                teacherName = columnsInLowerCase.IndexOf("teacher"),
+                student = columnsInLowerCase.IndexOf("student"),
+                teacher = columnsInLowerCase.IndexOf("teacher"),
                 relationshipTerm = columnsInLowerCase.IndexOf("relationship term"),
                 source = columnsInLowerCase.IndexOf("source"),
             };
 
+            var student = valStrings[colsInOrd.student];
+            var teacher = valStrings[colsInOrd.teacher];
+
             // get string values
             source = valStrings[colsInOrd.source];
             relationshipTerm = valStrings[colsInOrd.relationshipTerm];
-            studentName = valStrings[colsInOrd.studentName];
-            teacherName = valStrings[colsInOrd.teacherName];
+            studentName = student.Split(". ")[1];
+            teacherName = teacher.Split(". ")[1];
             // get int values
-            studentId = int.Parse(valStrings[colsInOrd.studentId]);
-            teacherId = int.Parse(valStrings[colsInOrd.teacherId]);
+            studentId = int.Parse(student.Split(". ")[0]);
+            teacherId = int.Parse(teacher.Split(". ")[0]);
         }
     }
 }

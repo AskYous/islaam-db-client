@@ -89,7 +89,7 @@ namespace islaam_db_client
 
         public string BioIntro(IslaamDBClient idb)
         {
-            var people = idb.PersonAPI.GetData().ToList();
+            var people = idb.PersonAPI.GetDataFromSheet().ToList();
             var pronoun = isMale ? "He" : "She";
             var possesivePronoun = isMale ? "His" : "Her";
             List<string> bioIntro = new List<string> { $"{pronoun} is " };

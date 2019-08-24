@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace islaam_db_client
@@ -11,7 +12,7 @@ namespace islaam_db_client
         {
             this.Caller = caller;
         }
-        public IList<Person> GetData()
+        public IList<Person> GetDataFromSheet()
         {
             var values = Caller.Get("People", "A", "Z");
             var people = values
@@ -27,35 +28,44 @@ namespace islaam_db_client
             return people;
 
         }
-        public List<Person> Search(string query)
+        public List<PersonSearchResult> Search(string query)
         {
-            query = query.ToLower();
-            var data = GetData();
-            var resultsQuery = data
-                .OrderBy(p =>
-                {
-                    var tempName = p.name;
-                    var tempKunya = p.kunya;
-
-                    if (!query.ToLower().Contains("shaykh") && !query.ToLower().Contains("shaikh"))
-                    {
-                        tempName = tempName.Replace("Shaykh", "");
-                        tempKunya = tempKunya?.Replace("Shaykh", "");
-                    }
-                    if (tempName == query) return 0;
-                    if (tempKunya != null && tempKunya == query) return 0;
-
-                    if (tempName.Contains(query)) return 0;
-                    if (tempKunya != null && tempKunya.Contains(query)) return 0;
-
-                    var nameScore = LevenshteinDistance.Compute(query, tempName);
-                    var kunyaScore = int.MaxValue;
-
-                    if (tempKunya != null) kunyaScore = LevenshteinDistance.Compute(query, p.kunya);
-                    return Math.Min(nameScore, kunyaScore);
+            var data = GetDataFromSheet();
+            var resultsQuery = data.Select(p => new PersonSearchResult {
+                    person = p,
+                    lavDistance = GetLavDistanceForPerson(query, p),
                 });
-            var results = resultsQuery.ToList();
-            return results;
+            return resultsQuery.ToList();
         }
+
+        public int GetLavDistanceForPerson(string query, Person p)
+        {
+            var queryVariations = QueryHelpers.GetNameVariations(query);
+            var lowestScore = int.MaxValue;
+            var nameVariations = QueryHelpers
+                .GetNameVariations(p.name)
+                .Concat(QueryHelpers.GetNameVariations(p.kunya));
+
+            //if (p.id == 106) Debugger.Break();
+
+            foreach (string variation in queryVariations)
+            {
+                foreach (string nameVariation in nameVariations)
+                {
+                    // check if exact match
+                    if (nameVariation == variation) return 0;
+
+                    var score = LevenshteinDistance.Compute(variation, nameVariation);
+                    lowestScore = Math.Min(lowestScore, score);
+                }
+            }
+
+            return lowestScore;
+        }
+    }
+    public class PersonSearchResult
+    {
+        public int lavDistance;
+        public Person person;
     }
 }

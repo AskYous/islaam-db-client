@@ -14,6 +14,14 @@ namespace islaam_db_client
         /// </summary>
         public int recommenderId;
         /// <summary>
+        /// The name of the recommendee
+        /// </summary>
+        public string recommendeeName;
+        /// <summary>
+        /// The name of the recommender
+        /// </summary>
+        public string recommenderName;
+        /// <summary>
         /// The title he was given
         /// </summary>
         public string title;
@@ -35,18 +43,23 @@ namespace islaam_db_client
             /// Get column orders
             var colsInOrd = new
             {
-                recommendeeId = columnsInLowerCase.IndexOf("recommendee id"),
-                recommenderId = columnsInLowerCase.IndexOf("recommender id"),
+                recommendee = columnsInLowerCase.IndexOf("recommendee"),
+                recommender = columnsInLowerCase.IndexOf("recommender"),
                 title = columnsInLowerCase.IndexOf("title"),
                 source = columnsInLowerCase.IndexOf("source"),
             };
 
+            var recommendee = valStrings[colsInOrd.recommendee];
+            var recommender = valStrings[colsInOrd.recommender];
+
             // get string values
             source = valStrings[colsInOrd.source];
             title = valStrings[colsInOrd.title];
+            recommendeeName = recommendee.Split(". ")[1];
+            recommenderName = recommender.Split(". ")[1];
             // get int values
-            recommendeeId = int.Parse(valStrings[colsInOrd.recommendeeId]);
-            recommenderId = int.Parse(valStrings[colsInOrd.recommenderId]);
+            recommendeeId = int.Parse(recommendee.Split(". ")[0]);
+            recommenderId = int.Parse(recommender.Split(". ")[0]);
         }
     }
 }
