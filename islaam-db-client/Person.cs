@@ -92,13 +92,14 @@ namespace islaam_db_client
             var people = idb.PersonAPI.GetDataFromSheet().ToList();
             var pronoun = isMale ? "He" : "She";
             var possesivePronoun = isMale ? "His" : "Her";
-            List<string> bioIntro = new List<string> { $"{pronoun} is " };
+            var bioIntro = new List<string> { $"{pronoun} is " };
             var praises = idb.PraisesAPI.GetData().Where(pr => pr.recommendeeId == id).ToList();
-            var titles = String.Join(", ", praises.Select(p => p.title).Distinct());
+            var titles = praises.Where(p => p.title != null).Select(p => p.title).Distinct().ToList();
             var praisers = getPraisers(people, praises);
 
             // booleans
             var hasPraises = praises.Count > 0;
+            var hasTitles = titles.Count > 0;
             var hasLocation = location != null;
             var hasKunya = kunya != null;
             var hasDeathYear = deathYear != null;
@@ -106,33 +107,39 @@ namespace islaam_db_client
 
             // praises
             bioIntro[0] += (hasKunya ? kunya : name) + ".";
-            if (hasPraises)
-                bioIntro.Add($"{possesivePronoun} titles include: {titles}.");
+            if (hasTitles)
+            {
+                bioIntro.Add($"{possesivePronoun} titles include: {String.Join(", ", titles)}.");
+            }
 
             // location
-            if (hasLocation) bioIntro.Add($"{pronoun} is from {location}.");
+            if (hasLocation)
+            {
+                bioIntro.Add($"{pronoun} is from {location}.");
+            }
 
             // birth and death year
             if (hasBirthYear && hasDeathYear)
+            {
                 bioIntro.Add(
                     $"{pronoun} was born in the year {birthYear} and died {deathYear} AH."
                 );
-            else if (hasBirthYear) bioIntro.Add($"{pronoun} was born in the year {birthYear} AH.");
-            else if (hasDeathYear) bioIntro.Add($"{pronoun} died in the year {deathYear} AH.");
+            }
+            else if (hasBirthYear)
+            {
+                bioIntro.Add($"{pronoun} was born in the year {birthYear} AH.");
+            }
+            else if (hasDeathYear)
+            {
+                bioIntro.Add($"{pronoun} died in the year {deathYear} AH.");
+            }
 
             if (hasPraises)
             {
-                bioIntro.Add($"His praisers include: {praisers}");
+                bioIntro.Add($"He was priased by: {praisers}.");
             }
 
-            bioIntro.Add($"\n\nSource:\n{source}.");
-
-            if (bioIntro.Count == 2)
-            {
-                bioIntro.Add("\nSorry. That's all I know at the moment.");
-            }
-
-            bioIntro.Add("\n\nPlease note that the research is not yet complete.");
+            bioIntro.Add("(Please note that the research is not yet complete.)");
 
             // join sentences together
             return String.Join(" ", bioIntro);
@@ -140,11 +147,11 @@ namespace islaam_db_client
         private string getPraisers(List<Person> people, List<Praise> praises)
         {
             return String.Join(", ", praises
-                        .Select(p => p.recommenderId)
-                        .Distinct()
-                        .Select(pId => people.First(p => p.id == pId))
-                        .Select(person => person.name)
-                    );
+                .Select(p => p.recommenderId)
+                .Distinct()
+                .Select(pId => people.First(p => p.id == pId))
+                .Select(person => person.name)
+            );
         }
     }
 }
