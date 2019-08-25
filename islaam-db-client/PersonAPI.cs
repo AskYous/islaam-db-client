@@ -28,14 +28,20 @@ namespace islaam_db_client
             return people;
 
         }
+        public Person GetPersonById(int id)
+        {
+            return GetDataFromSheet().FirstOrDefault(p => p.id == id);
+        }
         public List<PersonSearchResult> Search(string query)
         {
             var data = GetDataFromSheet();
             var resultsQuery = data.Select(p => new PersonSearchResult {
                     person = p,
                     lavDistance = GetLavDistanceForPerson(query, p),
-                });
-            return resultsQuery.ToList();
+                })
+                .OrderBy(x => x.lavDistance)
+                .ToList();
+            return resultsQuery;
         }
 
         public int GetLavDistanceForPerson(string query, Person p)

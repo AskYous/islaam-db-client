@@ -7,9 +7,9 @@ namespace islaam_db_client
     public class Person
     {
         /// <summary>
-        /// The gender of the person. Always MALE at the moment!
+        /// The gender of the person.
         /// </summary>
-        public bool isMale = true;
+        public bool useMasculinePronoun = true;
         /// <summary>
         /// An identifier for the person.
         /// </summary>
@@ -68,6 +68,7 @@ namespace islaam_db_client
                 deathYear = columnsInLowerCase.IndexOf("death year"),
                 location = columnsInLowerCase.IndexOf("location"),
                 source = columnsInLowerCase.IndexOf("source"),
+                gender = columnsInLowerCase.IndexOf("gender"),
             };
 
             // get string values
@@ -85,13 +86,16 @@ namespace islaam_db_client
                 birthYear = int.Parse(valStrings[colsInOrd.birthYear]);
             if (valStrings[colsInOrd.deathYear] != null)
                 deathYear = int.Parse(valStrings[colsInOrd.deathYear]);
+
+            // This handles the case for Allaah since Allaah is referred to as "He"
+            useMasculinePronoun = valStrings[colsInOrd.gender]?.ToLower() != "female";
         }
 
         public string BioIntro(IslaamDBClient idb)
         {
             var people = idb.PersonAPI.GetDataFromSheet().ToList();
-            var pronoun = isMale ? "He" : "She";
-            var possesivePronoun = isMale ? "His" : "Her";
+            var pronoun = useMasculinePronoun ? "He" : "She";
+            var possesivePronoun = useMasculinePronoun ? "His" : "Her";
             var bioIntro = new List<string> { $"{pronoun} is " };
             var praises = idb.PraisesAPI.GetData().Where(pr => pr.recommendeeId == id).ToList();
             var titles = praises.Where(p => p.title != null).Select(p => p.title).Distinct().ToList();

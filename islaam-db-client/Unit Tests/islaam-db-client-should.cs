@@ -114,6 +114,7 @@ namespace islaam_db_client_unit_tests
         [InlineData("John Jones", null)]
         [InlineData("John", null)]
         [InlineData("Moosaa", null)]
+        [InlineData("abu hurayrah", null)]
         public void SearchForAPerson(string query, int? id, int maxSxore = 5)
         {
             var scores = islaamDB.PersonAPI.Search(query);
@@ -146,11 +147,27 @@ namespace islaam_db_client_unit_tests
         //[InlineData(72)]
         public void GetBioQuickly(int id)
         {
-            var person = islaamDB.PersonAPI.GetDataFromSheet().First(p => p.id == id);
+            var person = islaamDB.PersonAPI.GetPersonById(id);
             var start = DateTime.Now;
             var bio = person.BioIntro(islaamDB);
             var time = DateTime.Now - start;
             Assert.True(time.TotalSeconds < 3);
+        }
+    }
+
+    public class Gender
+    {
+        private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
+        [Theory]
+        [InlineData(337, false)]
+        [InlineData(1, true)]
+        [InlineData(2, true)]
+        [InlineData(307, false)]
+        public void TestGender(int id, bool useMascPronoun)
+        {
+            var person = islaamDB.PersonAPI.GetPersonById(id);
+            var actual = person.useMasculinePronoun;
+            Assert.Equal(useMascPronoun, actual);
         }
     }
 }
