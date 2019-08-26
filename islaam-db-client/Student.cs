@@ -55,8 +55,8 @@ namespace islaam_db_client
             // get string values
             source = valStrings[colsInOrd.source];
             relationshipTerm = valStrings[colsInOrd.relationshipTerm];
-            studentName = student.Split(". ")[1];
-            teacherName = teacher.Split(". ")[1];
+            studentName = string.Join(". ", student.Split(". ").Skip(1));
+            teacherName = string.Join(". ", teacher.Split(". ").Skip(1));
             // get int values
             studentId = int.Parse(student.Split(". ")[0]);
             teacherId = int.Parse(teacher.Split(". ")[0]);

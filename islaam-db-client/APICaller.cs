@@ -21,7 +21,7 @@ namespace islaam_db_client
                 ApiKey = ApiKey
             });
         }
-        public IList<IList<object>> Get(
+        public List<List<string>> Get(
             string sheetName = "People",
             string fromRange = "A",
             string toRange = "Z",
@@ -44,7 +44,8 @@ namespace islaam_db_client
                         }
                     }
                     return true;
-                });
+                })
+                .Select(s => s.Select(x => x.ToString().Trim()).ToList());
             return values.ToList();
         }
 

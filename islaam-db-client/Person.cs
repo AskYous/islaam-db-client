@@ -7,7 +7,8 @@ namespace islaam_db_client
     public class Person
     {
         /// <summary>
-        /// The gender of the person.
+        /// Whether to use 'his' or 'her.'
+        /// Better than 'gender' since Allaah has no gender.
         /// </summary>
         public bool useMasculinePronoun = true;
         /// <summary>
@@ -30,6 +31,10 @@ namespace islaam_db_client
         /// The person's birth year.
         /// </summary>
         public int? birthYear;
+        /// <summary>
+        /// The person's birth year.
+        /// </summary>
+        public string birthPlace;
         /// <summary>
         /// The person's death year.
         /// </summary>
@@ -78,6 +83,9 @@ namespace islaam_db_client
             location = valStrings[colsInOrd.location];
             generation = valStrings[colsInOrd.generation];
 
+            if (generation != null && generation.ToLower() == "later generations")
+                generation = generation.ToLower();
+
             // get int values
             id = int.Parse(valStrings[colsInOrd.id]);
             if (valStrings[colsInOrd.taqreebId] != null)
@@ -91,15 +99,20 @@ namespace islaam_db_client
             useMasculinePronoun = valStrings[colsInOrd.gender]?.ToLower() != "female";
         }
 
-        public string BioIntro(IslaamDBClient idb)
+        public BioInfo GetBio(IslaamDBClient idb)
         {
             var people = idb.PersonAPI.GetDataFromSheet().ToList();
             var pronoun = useMasculinePronoun ? "He" : "She";
             var possesivePronoun = useMasculinePronoun ? "His" : "Her";
-            var bioIntro = new List<string> { $"{pronoun} is " };
-            var praises = idb.PraisesAPI.GetData().Where(pr => pr.recommendeeId == id).ToList();
-            var titles = praises.Where(p => p.title != null).Select(p => p.title).Distinct().ToList();
-            var praisers = getPraisers(people, praises);
+
+            // start
+            var biography = $"{pronoun} is ";
+            var praises = GetUniquePraises(idb);
+            var teachersAndStudents = GetTeachersAndStudents(idb);
+            var teachers = GetUniqueTeachers(teachersAndStudents);
+            var students = GetUniqueStudents(teachersAndStudents);
+            var titles = GetUniqueTitles(praises);
+            var praiserNames = FriendlyJoin(praises.Select(x => x.recommenderName).ToList());
 
             // booleans
             var hasPraises = praises.Count > 0;
@@ -108,54 +121,147 @@ namespace islaam_db_client
             var hasKunya = kunya != null;
             var hasDeathYear = deathYear != null;
             var hasBirthYear = birthYear != null;
+            var hasBirthPlace = birthPlace != null;
+            var hasTeachers = teachers.Count > 0;
+            var hasStudents = students.Count > 0;
+            var hasGeneration = generation != null;
 
-            // praises
-            bioIntro[0] += (hasKunya ? kunya : name) + ".";
+            /** The amount of information in this bio **/
+            var amountOfInfo = GetAmountOfInfo();
+
+            // titles
             if (hasTitles)
-            {
-                bioIntro.Add($"{possesivePronoun} titles include: {String.Join(", ", titles)}.");
-            }
+                biography += $"the {String.Join("the ,", titles)} ";
+
+            // name or kunya
+            if (hasKunya)
+                biography += kunya;
+            else
+                biography += name;
+
+            if (hasGeneration)
+                biography += $", from the {generation}";
+            biography += ". ";
+
+            // birth
+            if (hasBirthYear)
+                if (hasBirthPlace)
+                    biography += $"{pronoun} was born in {birthPlace} in the year {birthYear} AH. ";
+                else
+                    biography += $"{pronoun} was born in the year {birthYear} AH. ";
+            else
+                if (hasBirthPlace)
+                biography += $"{pronoun} was born in {birthPlace}. (I don't have {possesivePronoun} birth year yet.) ";
 
             // location
             if (hasLocation)
-            {
-                bioIntro.Add($"{pronoun} is from {location}.");
-            }
+                biography += $"{pronoun} lived in {location}. ";
 
-            // birth and death year
-            if (hasBirthYear && hasDeathYear)
-            {
-                bioIntro.Add(
-                    $"{pronoun} was born in the year {birthYear} and died {deathYear} AH."
-                );
-            }
-            else if (hasBirthYear)
-            {
-                bioIntro.Add($"{pronoun} was born in the year {birthYear} AH.");
-            }
-            else if (hasDeathYear)
-            {
-                bioIntro.Add($"{pronoun} died in the year {deathYear} AH.");
-            }
-
+            // praises
             if (hasPraises)
-            {
-                bioIntro.Add($"He was priased by: {praisers}.");
-            }
+                biography += $"{pronoun} was praised by {praiserNames}. ";
 
-            bioIntro.Add("(Please note that the research is not yet complete.)");
+            // teachers
+            if (hasTeachers)
+                biography += $"{pronoun} took knowledge from {FriendlyJoin(teachers)}. ";
+
+            // students
+            if (hasStudents)
+                biography += $"{pronoun} taught {FriendlyJoin(students)}. ";
+
+            // books
+            // not yet supported
+
+            // death year
+            if (hasDeathYear)
+                biography += $"{pronoun} died in the year {deathYear} AH.";
+
+            biography = biography.Trim();
 
             // join sentences together
-            return String.Join(" ", bioIntro);
+            return new BioInfo
+            {
+                info = biography,
+                amountOfInfo = amountOfInfo,
+            };
+
+            int GetAmountOfInfo()
+            {
+                return new bool[] {
+                    hasPraises,
+                    hasTitles,
+                    hasLocation,
+                    hasKunya,
+                    hasDeathYear,
+                    hasBirthYear,
+                    hasBirthPlace,
+                    hasTeachers,
+                    hasStudents,
+                    hasGeneration
+                }.Where(x => x).Count();
+            }
         }
-        private string getPraisers(List<Person> people, List<Praise> praises)
+
+        private static List<string> GetUniqueTitles(List<Praise> praises)
         {
-            return String.Join(", ", praises
-                .Select(p => p.recommenderId)
+            return praises
+                .Where(p => p.title != null)
+                .Select(p => p.title)
                 .Distinct()
-                .Select(pId => people.First(p => p.id == pId))
-                .Select(person => person.name)
-            );
+                .ToList();
         }
+
+        private List<string> GetUniqueStudents(IEnumerable<Student> teachersAndStudents)
+        {
+            return teachersAndStudents
+                .Where(x => x.teacherId == id)
+                .GroupBy(x => x.studentId)
+                .Select(x => x.First())
+                .Select(x => x.studentName)
+                .ToList();
+        }
+
+        private List<string> GetUniqueTeachers(IEnumerable<Student> teachersAndStudents)
+        {
+            var teachers = teachersAndStudents
+                .Where(x => x.studentId == id)
+                .GroupBy(x => x.teacherId)
+                .Select(x => x.First())
+                .Select(x => x.teacherName)
+                .ToList();
+            return teachers;
+        }
+
+        private IEnumerable<Student> GetTeachersAndStudents(IslaamDBClient idb)
+        {
+            return idb.StudentsAPI
+                .GetData()
+                .Where(x => x.studentId == id || x.teacherId == id);
+        }
+
+        private List<Praise> GetUniquePraises(IslaamDBClient idb)
+        {
+            var praises = idb.PraisesAPI
+                .GetData()
+                .Where(pr => pr.recommendeeId == id)
+                .GroupBy(x => x.recommenderId)
+                .Select(x => x.First()) // make unique
+                .ToList();
+            return praises;
+        }
+
+        private string FriendlyJoin(List<string> list)
+        {
+            if (list.Count == 0) return null;
+            if (list.Count == 1) return list[0];
+            if (list.Count == 2) return $"{list[0]} and {list[1]}";
+
+            return $"{String.Join(", ", list.SkipLast(1))}, and {list.Last()}";
+        }
+    }
+    public class BioInfo
+    {
+        public int amountOfInfo;
+        public string info;
     }
 }

@@ -132,24 +132,25 @@ namespace islaam_db_client_unit_tests
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
-        //[InlineData(99)]
-        //[InlineData(253)]
-        //[InlineData(69)]
-        //[InlineData(7)]
-        //[InlineData(215)]
-        //[InlineData(106)]
-        //[InlineData(73)]
-        //[InlineData(74)]
-        //[InlineData(210)]
-        //[InlineData(71)]
-        //[InlineData(16)]
-        //[InlineData(89)]
-        //[InlineData(72)]
+        [InlineData(99)]
+        [InlineData(253)]
+        [InlineData(69)]
+        [InlineData(7)]
+        [InlineData(215)]
+        [InlineData(106)]
+        [InlineData(73)]
+        [InlineData(74)]
+        [InlineData(210)]
+        [InlineData(71)]
+        [InlineData(16)]
+        [InlineData(89)]
+        [InlineData(72)]
         public void GetBioQuickly(int id)
         {
+            // TODO: foreign people need their title!
             var person = islaamDB.PersonAPI.GetPersonById(id);
             var start = DateTime.Now;
-            var bio = person.BioIntro(islaamDB);
+            var bio = person.GetBio(islaamDB);
             var time = DateTime.Now - start;
             Assert.True(time.TotalSeconds < 3);
         }
