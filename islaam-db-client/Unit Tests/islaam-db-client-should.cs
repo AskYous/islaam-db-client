@@ -150,7 +150,7 @@ namespace islaam_db_client_unit_tests
             // TODO: foreign people need their title!
             var person = islaamDB.PersonAPI.GetPersonById(id);
             var start = DateTime.Now;
-            var bio = person.GetBio(islaamDB);
+            var bio = person.GetBio(islaamDB).text;
             var time = DateTime.Now - start;
             Assert.True(time.TotalSeconds < 3);
         }

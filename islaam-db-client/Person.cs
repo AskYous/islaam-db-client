@@ -138,10 +138,10 @@ namespace islaam_db_client
                 biography += kunya;
             else
                 biography += name;
+            biography += ". ";
 
             if (hasGeneration)
-                biography += $", from the {generation}";
-            biography += ". ";
+                biography += $"{pronoun} is from the {generation}. ";
 
             // birth
             if (hasBirthYear)
@@ -181,7 +181,7 @@ namespace islaam_db_client
             // join sentences together
             return new BioInfo
             {
-                info = biography,
+                text = biography,
                 amountOfInfo = amountOfInfo,
             };
 
@@ -262,6 +262,6 @@ namespace islaam_db_client
     public class BioInfo
     {
         public int amountOfInfo;
-        public string info;
+        public string text;
     }
 }
