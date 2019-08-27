@@ -80,7 +80,8 @@ namespace islaam_db_client_unit_tests
                 Assert.Equal(praises[i].recommenderId, praisers[i]);
             }
         }
-    } public class Search
+    }
+    public class Search
     {
         private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
 
@@ -127,10 +128,12 @@ namespace islaam_db_client_unit_tests
                 Assert.Equal(ordered[0].person.id, id); // "Should be correct search result."
         }
     }
-    public class Bio {
+    public class Bio
+    {
         private readonly IslaamDBClient islaamDB = new IslaamDBClient(APIKey.KEY);
         [Theory]
         [InlineData(1)]
+        [InlineData(98)]
         [InlineData(2)]
         [InlineData(99)]
         [InlineData(253)]

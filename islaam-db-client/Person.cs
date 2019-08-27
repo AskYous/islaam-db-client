@@ -131,7 +131,7 @@ namespace islaam_db_client
 
             // titles
             if (hasTitles)
-                biography += $"the {String.Join("the ,", titles)} ";
+                biography += $"the {String.Join(", the ", titles)}, ";
 
             // name or kunya
             if (hasKunya)
